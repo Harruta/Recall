@@ -7,33 +7,27 @@ const handler = NextAuth({
       clientId: process.env.TWITTER_CLIENT_ID!,
       clientSecret: process.env.TWITTER_CLIENT_SECRET!,
       version: "2.0",
+      authorization: {
+        url: "https://twitter.com/i/oauth2/authorize",
+        params: {
+          scope: "tweet.read users.read bookmark.read offline.access",
+        },
+      },
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token;
-        token.id = profile?.id_str || profile?.id;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.accessToken = token.accessToken as string;
-      session.user.id = token.id as string;
+      session.accessToken = token.accessToken;
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      // Always redirect to the home page after sign in
-      return baseUrl;
-    },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: '/',
-    signOut: '/',
-    error: '/',
-    newUser: '/'
-  }
+  debug: true,
 });
 
 export { handler as GET, handler as POST }; 
